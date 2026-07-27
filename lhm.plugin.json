@@ -1,0 +1,18 @@
+{
+  "name": "GPT Image MCP",
+  "description": "Production-ready Remote MCP server for OpenAI GPT Image (gpt-image-1)",
+  "author": "Yularzhi",
+  "authorUrl": "https://github.com/Yularzhi",
+  "homepage": "https://github.com/Yularzhi/gpt-image-mcp",
+  "icon": "🎨",
+  "category": "ai",
+  "tags": [
+    "openai",
+    "gpt-image",
+    "image-generation",
+    "fastmcp",
+    "fastapi",
+    "remote-mcp"
+  ],
+  "version": "1.0.0"
+}
