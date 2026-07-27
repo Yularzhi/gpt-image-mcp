@@ -9,7 +9,7 @@ import app.tools
 
 setup_logging(settings.LOG_LEVEL)
 
-mcp_app = mcp.http_app(path="/mcp")
+mcp_app = mcp.http_app(path="/")
 
 app = FastAPI(
     title="GPT Image MCP",
@@ -21,6 +21,11 @@ app.mount(
     "/images",
     StaticFiles(directory=settings.IMAGE_DIR),
     name="images",
+)
+
+app.mount(
+    "/mcp",
+    mcp_app,
 )
 
 @app.get("/")
@@ -36,6 +41,3 @@ async def http_health():
     return {
         "status": "ok",
     }
-
-
-app.router.routes[:0] = mcp_app.routes
