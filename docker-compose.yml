@@ -1,0 +1,18 @@
+services:
+
+  gpt-image-mcp:
+
+    build: .
+
+    container_name: gpt-image-mcp
+
+    restart: unless-stopped
+
+    env_file:
+      - .env
+
+    volumes:
+      - ./data/images:/data/images
+
+    ports:
+      - "8080:8080"
