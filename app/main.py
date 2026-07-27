@@ -9,10 +9,12 @@ import app.tools
 
 setup_logging(settings.LOG_LEVEL)
 
+mcp_app = mcp.http_app(path="/")
+
 app = FastAPI(
     title="GPT Image MCP",
     version="1.0.0",
-    lifespan=mcp.lifespan,
+    lifespan=mcp_app.lifespan,
 )
 
 app.mount(
@@ -23,7 +25,7 @@ app.mount(
 
 app.mount(
     "/mcp",
-    mcp.http_app(),
+    mcp_app,
 )
 
 
