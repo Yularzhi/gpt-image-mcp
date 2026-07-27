@@ -2,6 +2,11 @@
 
 Сервис на FastAPI + FastMCP для генерации и редактирования изображений через OpenAI.
 
+[![Python](https://img.shields.io/badge/Python-3.12%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/)
+[![Docker](https://img.shields.io/badge/Docker-ready-2496ED?logo=docker&logoColor=white)](https://www.docker.com/)
+[![License](https://img.shields.io/github/license/Yularzhi/gpt-image-mcp)](./LICENSE)
+[![CI](https://img.shields.io/github/actions/workflow/status/Yularzhi/gpt-image-mcp/ci.yml?branch=main)](./.github/workflows/ci.yml)
+
 ## Что есть в проекте
 
 - MCP-инструменты: `generate_image`, `edit_image`, `health`
@@ -94,3 +99,24 @@ git push -u origin main
 - `generate_image` и `edit_image` возвращают одинаковую структуру ответа.
 - Если `PUBLIC_URL` задан, ссылки на изображения будут с ним; иначе будет использоваться `/images/{filename}`.
 - Старые изображения автоматически удаляются по `IMAGE_RETENTION_DAYS`.
+
+## Troubleshooting
+
+- `401 Unauthorized`
+  - Укажи `MCP_API_KEY` на сервере и передавай `Authorization: Bearer <token>` из клиента.
+  - Если используется LobeHub или nginx, убедись, что прокси передаёт заголовок `Authorization`.
+- `404 Not Found` на `/mcp/`
+  - Используй адрес со слэшем в конце: `POST /mcp/`.
+  - Проверь, что nginx проксирует запросы на локальный порт контейнера и не переписывает путь.
+  - Убедись, что FastMCP подключён через `app.main:app`.
+- `Invalid image` или `Unsupported image`
+  - Используй настоящий PNG, JPEG или WEBP файл.
+  - Для маски нужен только PNG, и её размер должен совпадать с первым входным изображением.
+  - Проверь, что файл не повреждён и не превышает `MAX_UPLOAD_MB` или `MAX_MASK_MB`.
+- Ошибки OpenAI API
+  - Проверь, что `OPENAI_API_KEY` задан и корректен.
+  - Проверь лимиты, квоту и доступность модели.
+  - Убедись, что у сервера есть исходящий доступ в OpenAI.
+- Ссылка на изображение не открывается
+  - Укажи `PUBLIC_URL` как внешний домен сервиса.
+  - Проверь, что nginx раздаёт `/images/` и каталог изображений смонтирован в контейнер.

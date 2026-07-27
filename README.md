@@ -2,6 +2,11 @@
 
 FastAPI + FastMCP service for generating and editing images with OpenAI image models.
 
+[![Python](https://img.shields.io/badge/Python-3.12%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/)
+[![Docker](https://img.shields.io/badge/Docker-ready-2496ED?logo=docker&logoColor=white)](https://www.docker.com/)
+[![License](https://img.shields.io/github/license/Yularzhi/gpt-image-mcp)](./LICENSE)
+[![CI](https://img.shields.io/github/actions/workflow/status/Yularzhi/gpt-image-mcp/ci.yml?branch=main)](./.github/workflows/ci.yml)
+
 ## What you get
 
 - MCP tools: `generate_image`, `edit_image`, `health`
@@ -94,3 +99,24 @@ git push -u origin main
 - `generate_image` and `edit_image` return the same response shape.
 - Returned image URLs use `PUBLIC_URL` when it is set, otherwise they fall back to `/images/{filename}`.
 - Old images are cleaned up automatically according to `IMAGE_RETENTION_DAYS`.
+
+## Troubleshooting
+
+- `401 Unauthorized`
+  - Set `MCP_API_KEY` on the server and send `Authorization: Bearer <token>` from the client.
+  - If you are using LobeHub or nginx, make sure the proxy forwards the `Authorization` header.
+- `404 Not Found` on `/mcp/`
+  - Use the trailing slash: `POST /mcp/`.
+  - Confirm nginx proxies to the local container port and does not rewrite the path.
+  - Verify the FastMCP server is mounted through `app.main:app`.
+- `Invalid image` or `Unsupported image`
+  - Use a real PNG, JPEG, or WEBP input image.
+  - For masks, use PNG only and keep the mask the same size as the first input image.
+  - Check that the file is not corrupted and is smaller than `MAX_UPLOAD_MB` or `MAX_MASK_MB`.
+- `OpenAI API` errors
+  - Confirm `OPENAI_API_KEY` is set and valid.
+  - Check rate limits, quota, and model availability.
+  - Verify the server has outbound network access to OpenAI.
+- Image URL is not reachable
+  - Set `PUBLIC_URL` to the external domain that serves the service.
+  - Make sure nginx serves `/images/` correctly and the image directory is mounted into the container.
