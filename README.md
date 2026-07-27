@@ -97,6 +97,8 @@ git push -u origin main
 
 - `POST /mcp/` is the MCP transport endpoint expected by LobeHub.
 - `generate_image` and `edit_image` return the same response shape.
+- `edit_image` accepts image files stored under `IMAGE_DIR` or public `http(s)` URLs.
+- Local paths outside `IMAGE_DIR` and private or localhost remote URLs are rejected for security.
 - Returned image URLs use `PUBLIC_URL` when it is set, otherwise they fall back to `/images/{filename}`.
 - Old images are cleaned up automatically according to `IMAGE_RETENTION_DAYS`.
 
@@ -113,6 +115,9 @@ git push -u origin main
   - Use a real PNG, JPEG, or WEBP input image.
   - For masks, use PNG only and keep the mask the same size as the first input image.
   - Check that the file is not corrupted and is smaller than `MAX_UPLOAD_MB` or `MAX_MASK_MB`.
+- `File not found` or `Remote image host` errors
+  - Keep local file references under `IMAGE_DIR`.
+  - Use public, reachable `http(s)` URLs only.
 - `OpenAI API` errors
   - Confirm `OPENAI_API_KEY` is set and valid.
   - Check rate limits, quota, and model availability.

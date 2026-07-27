@@ -1,9 +1,12 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 from contextlib import suppress
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
+
+logger = logging.getLogger(__name__)
 
 
 def remove_expired_images(directory: Path, retention_days: int) -> int:
@@ -38,8 +41,16 @@ async def cleanup_loop(
     if retention_days <= 0:
         return
 
-    await asyncio.to_thread(remove_expired_images, directory, retention_days)
-
     while True:
+        try:
+            await asyncio.to_thread(remove_expired_images, directory, retention_days)
+        except Exception:  # noqa: BLE001
+            logger.exception(
+                "cleanup_cycle_failed",
+                extra={
+                    "directory": str(directory),
+                    "retention_days": retention_days,
+                },
+            )
+
         await asyncio.sleep(max(60, interval_seconds))
-        await asyncio.to_thread(remove_expired_images, directory, retention_days)

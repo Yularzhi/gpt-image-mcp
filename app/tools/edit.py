@@ -1,13 +1,9 @@
 from __future__ import annotations
 
 import base64
+import time
 from contextlib import suppress
 from pathlib import Path
-from tempfile import NamedTemporaryFile
-from urllib.parse import urlparse
-import time
-
-import httpx
 
 try:
     from fastmcp.dependencies import CurrentContext
@@ -20,6 +16,7 @@ except ModuleNotFoundError:
         return None
 
 from app.config import settings
+from app.image_sources import download_remote_image, resolve_local_image_source
 from app.image_validation import validate_image_file
 from app.logging import get_logger
 from app.mcp_server import mcp
@@ -30,72 +27,16 @@ from app.request_context import get_client_ip
 from app.storage import storage
 
 logger = get_logger(__name__)
-
-
-def _resolve_local_reference(source: str) -> Path | None:
-    public_url = settings.PUBLIC_URL
-
-    if public_url:
-        public_prefix = f"{public_url}/images/"
-        if source.startswith(public_prefix):
-            return settings.IMAGE_DIR / source.removeprefix(public_prefix)
-
-    if source.startswith("/images/"):
-        return settings.IMAGE_DIR / source.removeprefix("/images/")
-
-    if source.startswith("images/"):
-        return settings.IMAGE_DIR / source.removeprefix("images/")
-
-    candidate = Path(source).expanduser()
-    if candidate.exists():
-        return candidate
-
-    candidate = settings.IMAGE_DIR / source
-    if candidate.exists():
-        return candidate
-
-    return None
-
-
-async def _download_to_tempfile(source: str, temp_files: list[Path]) -> Path:
-    parsed = urlparse(source)
-    suffix = Path(parsed.path).suffix or ".img"
-
-    with NamedTemporaryFile(delete=False, suffix=suffix) as temp_file:
-        temp_path = Path(temp_file.name)
-
-    temp_files.append(temp_path)
-
-    max_bytes = settings.MAX_UPLOAD_MB * 1024 * 1024
-    total_bytes = 0
-
-    async with httpx.AsyncClient(timeout=settings.REQUEST_TIMEOUT_SECONDS) as client_:
-        async with client_.stream("GET", source) as response:
-            response.raise_for_status()
-
-            with temp_path.open("wb") as destination:
-                async for chunk in response.aiter_bytes():
-                    total_bytes += len(chunk)
-                    if total_bytes > max_bytes:
-                        raise ValueError(
-                            f"Remote image exceeds the configured size limit of "
-                            f"{settings.MAX_UPLOAD_MB} MB"
-                        )
-                    destination.write(chunk)
-
-    return temp_path
-
-
 async def _materialize_image_source(
     source: str,
     temp_files: list[Path],
 ) -> Path:
-    resolved = _resolve_local_reference(source)
+    resolved = resolve_local_image_source(source)
     if resolved is not None:
         return resolved
 
     if source.startswith(("http://", "https://")):
-        return await _download_to_tempfile(source, temp_files)
+        return await download_remote_image(source, temp_files)
 
     raise FileNotFoundError(f"Image source not found: {source}")
 

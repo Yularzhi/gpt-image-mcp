@@ -16,6 +16,12 @@ except ModuleNotFoundError:
             self.images = _MissingImages()
 
 
-client = AsyncOpenAI(
-    api_key=settings.OPENAI_API_KEY,
-)
+try:
+    client = AsyncOpenAI(
+        api_key=settings.OPENAI_API_KEY,
+        max_retries=0,
+    )
+except TypeError:
+    client = AsyncOpenAI(
+        api_key=settings.OPENAI_API_KEY,
+    )

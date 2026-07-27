@@ -46,7 +46,7 @@ def validate_image_file(
             image.load()
             format_name = (image.format or "").upper()
             width, height = image.size
-    except UnidentifiedImageError as exc:
+    except (UnidentifiedImageError, OSError, Image.DecompressionBombError) as exc:
         raise ValueError(f"Unsupported image file: {path}") from exc
 
     if not format_name:

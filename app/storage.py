@@ -5,9 +5,7 @@ from app.config import settings
 
 
 class Storage:
-
     def __init__(self):
-
         self.directory = Path(settings.IMAGE_DIR)
 
         self.directory.mkdir(
@@ -23,6 +21,7 @@ class Storage:
         clean_extension = extension.lstrip(".").lower() or "bin"
         filename = f"{uuid4()}.{clean_extension}"
 
+        self.directory.mkdir(parents=True, exist_ok=True)
         filepath = self.directory / filename
 
         filepath.write_bytes(data)

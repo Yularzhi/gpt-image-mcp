@@ -15,6 +15,8 @@ The project follows Semantic Versioning.
 ### Fixed
 
 - FastMCP 3.x HTTP mounting now publishes tools correctly at `/mcp/`.
+- Image source handling is restricted to `IMAGE_DIR` and public `http(s)` URLs.
+- OpenAI client initialization is compatible with older and newer SDK builds.
 
 ## [1.0.0] - 2026-07-27
 

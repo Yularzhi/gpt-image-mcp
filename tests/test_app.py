@@ -2,8 +2,8 @@ import asyncio
 import base64
 import importlib
 import os
-from pathlib import Path
 from io import BytesIO
+from pathlib import Path
 import tempfile
 import unittest
 from types import SimpleNamespace
@@ -123,15 +123,61 @@ class AppTests(unittest.TestCase):
 
             self.assertEqual(captured["model"], "gpt-image-1")
             self.assertEqual(len(captured["image"]), 2)
-            self.assertEqual(captured["image"][0], first)
-            self.assertEqual(captured["image"][1], second)
-            self.assertEqual(captured["mask"], mask)
+            self.assertEqual(captured["image"][0].resolve(), first.resolve())
+            self.assertEqual(captured["image"][1].resolve(), second.resolve())
+            self.assertEqual(captured["mask"].resolve(), mask.resolve())
             self.assertTrue(response.url.startswith("https://example.com/images/"))
             self.assertTrue(response.filename.endswith(".png"))
             self.assertEqual(
                 (edit_module.storage.directory / response.filename).read_bytes(),
                 b"edited-image-bytes",
             )
+
+    def test_edit_image_rejects_private_remote_urls(self):
+        os.environ["OPENAI_API_KEY"] = "test-key"
+        os.environ["PUBLIC_URL"] = "https://example.com"
+
+        edit_module = importlib.import_module("app.tools.edit")
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp_path = Path(temp_dir)
+            edit_module.settings.IMAGE_DIR = temp_path
+
+            with self.assertRaises(ValueError):
+                asyncio.run(
+                    edit_module._materialize_image_source(
+                        "http://127.0.0.1/image.png",
+                        [],
+                    )
+                )
+
+    def test_edit_image_rejects_paths_outside_storage(self):
+        os.environ["OPENAI_API_KEY"] = "test-key"
+        os.environ["PUBLIC_URL"] = "https://example.com"
+
+        from app.image_sources import resolve_local_image_source
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp_path = Path(temp_dir)
+            inside = temp_path / "inside.png"
+            outside_handle = tempfile.NamedTemporaryFile(delete=False, suffix=".png")
+            outside = Path(outside_handle.name)
+            outside_handle.close()
+
+            inside.write_bytes(_png_bytes((1, 2, 3, 255)))
+            outside.write_bytes(_png_bytes((4, 5, 6, 255)))
+
+            from app import config as config_module
+
+            original_dir = config_module.settings.IMAGE_DIR
+            config_module.settings.IMAGE_DIR = temp_path
+
+            try:
+                self.assertIsNotNone(resolve_local_image_source("inside.png"))
+                self.assertIsNone(resolve_local_image_source(str(outside)))
+            finally:
+                config_module.settings.IMAGE_DIR = original_dir
+                outside.unlink(missing_ok=True)
 
 
 async def _fake_generate_image(**kwargs):
