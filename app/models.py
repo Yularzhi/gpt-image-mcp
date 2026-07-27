@@ -25,6 +25,22 @@ class GenerateImageRequest(BaseModel):
     background: str = "auto"
 
 
+class EditImageRequest(BaseModel):
+    prompt: str = Field(..., min_length=1)
+
+    input_images: list[str] = Field(..., min_length=1)
+
+    mask: str | None = None
+
+    size: str = "1024x1024"
+
+    quality: str = "high"
+
+    output_format: str = "png"
+
+    background: str = "auto"
+
+
 class ImageResponse(BaseModel):
     url: str
 

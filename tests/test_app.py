@@ -7,7 +7,7 @@ import tempfile
 import unittest
 from types import SimpleNamespace
 
-from app.models import GenerateImageRequest
+from app.models import EditImageRequest, GenerateImageRequest
 
 
 class AppTests(unittest.TestCase):
@@ -64,6 +64,70 @@ class AppTests(unittest.TestCase):
             self.assertEqual(
                 (generate_module.storage.directory / response.filename).read_bytes(),
                 b"fake-image-bytes",
+            )
+
+    def test_edit_image_supports_multiple_inputs_and_mask(self):
+        os.environ["OPENAI_API_KEY"] = "test-key"
+        os.environ["PUBLIC_URL"] = "https://example.com"
+
+        edit_module = importlib.import_module("app.tools.edit")
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp_path = Path(temp_dir)
+            first = temp_path / "first.png"
+            second = temp_path / "second.png"
+            mask = temp_path / "mask.png"
+
+            first.write_bytes(b"first")
+            second.write_bytes(b"second")
+            mask.write_bytes(b"mask")
+
+            edit_module.settings.PUBLIC_URL = "https://example.com"
+            edit_module.settings.IMAGE_DIR = temp_path
+            edit_module.storage.directory = temp_path
+
+            captured = {}
+
+            async def _fake_edit_image(**kwargs):
+                captured.update(kwargs)
+                return SimpleNamespace(
+                    data=[
+                        SimpleNamespace(
+                            b64_json=base64.b64encode(b"edited-image-bytes").decode(
+                                "ascii"
+                            )
+                        )
+                    ]
+                )
+
+            edit_module.client = SimpleNamespace(
+                images=SimpleNamespace(
+                    edit=_fake_edit_image,
+                )
+            )
+
+            request = EditImageRequest(
+                prompt="Turn this into a neon poster",
+                input_images=[
+                    "https://example.com/images/first.png",
+                    "second.png",
+                ],
+                mask="https://example.com/images/mask.png",
+                output_format="png",
+            )
+
+            response = asyncio.run(edit_module.edit_image(request))
+
+            self.assertEqual(captured["model"], "gpt-image-1")
+            self.assertEqual(len(captured["image"]), 2)
+            self.assertEqual(captured["image"][0], first)
+            self.assertEqual(captured["image"][1], second)
+            self.assertEqual(captured["mask"], mask)
+            self.assertTrue(response.url.startswith("https://example.com/images/"))
+            self.assertTrue(response.filename.endswith(".png"))
+            self.assertEqual(
+                (edit_module.storage.directory / response.filename).read_bytes(),
+                b"edited-image-bytes",
             )
 
 

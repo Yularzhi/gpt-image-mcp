@@ -1,19 +1,24 @@
 # GPT Image MCP
 
-FastAPI + MCP service for generating images with OpenAI `gpt-image-1` and serving them as public files.
+FastAPI + MCP service for generating and editing images with OpenAI `gpt-image-1`.
 
 ## What it does
 
-- Exposes an MCP tool for image generation.
+- Exposes MCP tools for image generation and image editing.
 - Saves generated images locally.
-- Returns a public URL for each image.
+- Returns public URLs for saved images.
 - Provides simple HTTP health checks.
+
+## MCP tools
+
+- `generate_image` - create a new image from text
+- `edit_image` - edit one or more existing images, with optional mask support
 
 ## Endpoints
 
 - `GET /` - service status
 - `GET /health` - HTTP health check
-- `POST /mcp` - MCP transport
+- `POST /mcp` - MCP transport endpoint
 - `GET /images/{filename}` - served generated images
 
 ## Setup
@@ -70,7 +75,7 @@ Create a new empty repository on GitHub, then connect and push:
 
 ```bash
 git branch -M main
-git remote add origin https://github.com/<your-username>/<your-repo>.git
+git remote add origin git@github.com:<your-username>/<your-repo>.git
 git push -u origin main
 ```
 

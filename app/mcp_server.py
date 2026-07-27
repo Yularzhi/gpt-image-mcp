@@ -18,7 +18,7 @@ except ModuleNotFoundError:
         async def lifespan(self, app):
             yield
 
-        def http_app(self):
+        def http_app(self, path: str = "/"):
             async def app(scope, receive, send):
                 if scope["type"] == "http":
                     await send(
@@ -45,3 +45,5 @@ Generate and edit images using OpenAI gpt-image-1.
 Always return image URLs.
 """.strip(),
 )
+
+import app.tools.edit  # noqa: E402,F401
