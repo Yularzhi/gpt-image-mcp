@@ -44,3 +44,30 @@ class MCPIntegrationTests(unittest.TestCase):
             response = client.post("/mcp/", headers=headers, json={})
 
         self.assertNotEqual(response.status_code, 404)
+
+    def test_mcp_requires_bearer_token_when_configured(self):
+        from fastapi.testclient import TestClient
+
+        import app.main
+
+        headers = {
+            "accept": "application/json, text/event-stream",
+            "content-type": "application/json",
+        }
+
+        original_key = app.main.settings.MCP_API_KEY
+        app.main.settings.MCP_API_KEY = "super-secret"
+
+        try:
+            with TestClient(app.main.app) as client:
+                unauthorized = client.post("/mcp/", headers=headers, json={})
+                authorized = client.post(
+                    "/mcp/",
+                    headers={**headers, "authorization": "Bearer super-secret"},
+                    json={},
+                )
+
+            self.assertEqual(unauthorized.status_code, 401)
+            self.assertNotEqual(authorized.status_code, 404)
+        finally:
+            app.main.settings.MCP_API_KEY = original_key

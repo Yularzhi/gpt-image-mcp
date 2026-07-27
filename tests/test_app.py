@@ -3,9 +3,12 @@ import base64
 import importlib
 import os
 from pathlib import Path
+from io import BytesIO
 import tempfile
 import unittest
 from types import SimpleNamespace
+
+from PIL import Image
 
 from app.models import EditImageRequest, GenerateImageRequest
 
@@ -78,9 +81,9 @@ class AppTests(unittest.TestCase):
             second = temp_path / "second.png"
             mask = temp_path / "mask.png"
 
-            first.write_bytes(b"first")
-            second.write_bytes(b"second")
-            mask.write_bytes(b"mask")
+            first.write_bytes(_png_bytes((255, 0, 0, 255)))
+            second.write_bytes(_png_bytes((0, 255, 0, 255)))
+            mask.write_bytes(_png_bytes((0, 0, 0, 0)))
 
             edit_module.settings.PUBLIC_URL = "https://example.com"
             edit_module.settings.IMAGE_DIR = temp_path
@@ -139,3 +142,10 @@ async def _fake_generate_image(**kwargs):
             )
         ]
     )
+
+
+def _png_bytes(color: tuple[int, int, int, int]) -> bytes:
+    buffer = BytesIO()
+    image = Image.new("RGBA", (1, 1), color)
+    image.save(buffer, format="PNG")
+    return buffer.getvalue()

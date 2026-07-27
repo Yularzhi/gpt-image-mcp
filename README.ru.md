@@ -1,51 +1,59 @@
 # GPT Image MCP
 
-Сервис FastAPI + MCP для генерации и редактирования изображений через OpenAI `gpt-image-1`.
+Сервис на FastAPI + FastMCP для генерации и редактирования изображений через OpenAI.
 
-## Что делает проект
+## Что есть в проекте
 
-- Предоставляет MCP-инструменты для генерации и редактирования изображений.
-- Сохраняет изображения локально.
-- Возвращает публичные URL на сохранённые файлы.
-- Даёт простой HTTP health-check.
+- MCP-инструменты: `generate_image`, `edit_image`, `health`
+- MCP transport через Streamable HTTP на `POST /mcp/`
+- HTTP health-check на `GET /health`
+- Раздача изображений через `GET /images/{filename}`
+- Необязательная bearer-авторизация для `/mcp/` и `/images/*`
+- Валидация загрузок, retry, структурные логи и очистка старых файлов
 
 ## MCP-инструменты
 
-- `generate_image` - создать новое изображение по текстовому запросу
-- `edit_image` - отредактировать одно или несколько изображений, с поддержкой необязательной маски
+- `generate_image` создаёт новое изображение по тексту.
+- `edit_image` редактирует одно или несколько изображений и поддерживает необязательную маску.
+- `health` возвращает простой статус сервиса.
 
-## HTTP endpoint'ы
+## Переменные окружения
 
-- `GET /` - статус сервиса
-- `GET /health` - HTTP health-check
-- `POST /mcp` - MCP endpoint
-- `GET /images/{filename}` - раздача сохранённых изображений
-
-## Настройка
-
-1. Скопируй пример переменных окружения:
+Сначала скопируй пример:
 
 ```bash
 cp .env.example .env
 ```
 
-2. Заполни значения:
+Обязательно:
 
-- `OPENAI_API_KEY` - обязательно
-- `PUBLIC_URL` - публичный base URL, по которому будет доступен сервис
-- `IMAGE_DIR` - каталог для хранения изображений
+- `OPENAI_API_KEY` - ключ OpenAI
 
-Для локального запуска без Docker удобно использовать `IMAGE_DIR=data/images`.
-Для Docker лучше оставить `/data/images`.
+Опционально:
 
-## Запуск локально
+- `PUBLIC_URL` - публичный base URL для ссылок на изображения
+- `MCP_API_KEY` - bearer-токен для `/mcp/` и `/images/*`
+- `IMAGE_DIR` - каталог хранения изображений
+- `LOG_LEVEL` - уровень логирования, по умолчанию `INFO`
+- `MAX_UPLOAD_MB` - максимальный размер загружаемого изображения, по умолчанию `50`
+- `MAX_MASK_MB` - максимальный размер маски, по умолчанию `4`
+- `MAX_IMAGE_EDGE_PX` - максимальная длина стороны, по умолчанию `8192`
+- `IMAGE_RETENTION_DAYS` - срок хранения файлов, по умолчанию `7`
+- `CLEANUP_INTERVAL_SECONDS` - интервал очистки, по умолчанию `86400`
+- `OPENAI_RETRY_ATTEMPTS` - число повторов запросов к OpenAI, по умолчанию `3`
+- `OPENAI_RETRY_BASE_DELAY_SECONDS` - базовая задержка retry, по умолчанию `0.75`
+- `REQUEST_TIMEOUT_SECONDS` - таймаут загрузки удалённых изображений, по умолчанию `60`
 
-Установи зависимости и запусти приложение:
+## Локальный запуск
 
 ```bash
 pip install -r requirements.txt
 uvicorn app.main:app --host 0.0.0.0 --port 8080
 ```
+
+MCP endpoint доступен по адресу:
+
+- `http://localhost:8080/mcp/`
 
 ## Запуск через Docker
 
@@ -55,23 +63,24 @@ docker compose up --build
 
 ## Тесты
 
-Запуск тестов:
-
 ```bash
 python3 -m unittest discover -s tests -p "test*.py" -v
 ```
 
-## Публикация в GitHub
-
-Если папка ещё не является git-репозиторием:
+Если установлен `pytest`:
 
 ```bash
-git init
-git add .
-git commit -m "Initial commit"
+pytest -q
 ```
 
-Создай пустой репозиторий на GitHub, затем подключи его и отправь код:
+## Публикация в GitHub
+
+```bash
+git remote -v
+git push -u origin main
+```
+
+Если репозиторий ещё не подключён:
 
 ```bash
 git branch -M main
@@ -79,15 +88,9 @@ git remote add origin git@github.com:<your-username>/<your-repo>.git
 git push -u origin main
 ```
 
-Если remote уже существует:
-
-```bash
-git remote -v
-git push -u origin main
-```
-
 ## Примечания
 
-- Для работы нужен `OPENAI_API_KEY`.
-- `PUBLIC_URL` должен указывать на домен, по которому будут доступны изображения.
-- По умолчанию при локальном запуске файлы сохраняются в `data/images`.
+- `POST /mcp/` - это MCP endpoint, который ожидает LobeHub.
+- `generate_image` и `edit_image` возвращают одинаковую структуру ответа.
+- Если `PUBLIC_URL` задан, ссылки на изображения будут с ним; иначе будет использоваться `/images/{filename}`.
+- Старые изображения автоматически удаляются по `IMAGE_RETENTION_DAYS`.

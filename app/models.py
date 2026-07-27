@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 try:
     from pydantic import BaseModel, Field
 except ModuleNotFoundError:
@@ -14,38 +16,25 @@ except ModuleNotFoundError:
 
 
 class GenerateImageRequest(BaseModel):
-    prompt: str = Field(..., min_length=1)
-
+    prompt: str = Field(..., min_length=1, max_length=32_000)
     size: str = "1024x1024"
-
     quality: str = "high"
-
     output_format: str = "png"
-
     background: str = "auto"
 
 
 class EditImageRequest(BaseModel):
-    prompt: str = Field(..., min_length=1)
-
-    input_images: list[str] = Field(..., min_length=1)
-
+    prompt: str = Field(..., min_length=1, max_length=32_000)
+    input_images: list[str] = Field(..., min_length=1, max_length=16)
     mask: str | None = None
-
     size: str = "1024x1024"
-
     quality: str = "high"
-
     output_format: str = "png"
-
     background: str = "auto"
 
 
 class ImageResponse(BaseModel):
     url: str
-
     filename: str
-
     width: int | None = None
-
     height: int | None = None
