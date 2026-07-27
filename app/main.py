@@ -5,6 +5,8 @@ from app.config import settings
 from app.logging import setup_logging
 from app.mcp_server import mcp
 
+import app.tools
+
 setup_logging(settings.LOG_LEVEL)
 
 mcp_app = mcp.http_app(path="/")

@@ -45,5 +45,3 @@ Generate and edit images using OpenAI gpt-image-1.
 Always return image URLs.
 """.strip(),
 )
-
-import app.tools  # noqa: E402,F401
