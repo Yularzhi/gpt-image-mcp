@@ -1,18 +1,60 @@
 {
   "name": "GPT Image MCP",
-  "description": "Production-ready Remote MCP server for OpenAI GPT Image (gpt-image-1)",
+  "description": "Production-ready Remote MCP server for OpenAI GPT Image (gpt-image-1). Generate and edit images with bearer authentication, FastMCP, FastAPI and the official OpenAI Images API.",
+  "version": "1.0.0",
+
   "author": "Yularzhi",
   "authorUrl": "https://github.com/Yularzhi",
+
   "homepage": "https://github.com/Yularzhi/gpt-image-mcp",
+
   "icon": "🎨",
+
   "category": "ai",
+
   "tags": [
     "openai",
     "gpt-image",
+    "gpt-image-1",
     "image-generation",
+    "image-editing",
+    "mcp",
+    "remote-mcp",
     "fastmcp",
     "fastapi",
-    "remote-mcp"
+    "images",
+    "ai"
   ],
-  "version": "1.0.0"
+
+  "tools": [
+    {
+      "name": "generate_image",
+      "description": "Generate images using OpenAI GPT Image.",
+      "inputSchema": {
+        "type": "object"
+      }
+    },
+    {
+      "name": "edit_image",
+      "description": "Edit existing images using OpenAI GPT Image.",
+      "inputSchema": {
+        "type": "object"
+      }
+    },
+    {
+      "name": "health",
+      "description": "Check server health.",
+      "inputSchema": {
+        "type": "object"
+      }
+    }
+  ],
+
+  "localizations": [
+    {
+      "locale": "ru-RU",
+      "name": "GPT Image MCP",
+      "description": "Готовый к продакшену Remote MCP сервер для OpenAI GPT Image (gpt-image-1). Генерация и редактирование изображений через FastMCP и FastAPI."
+    }
+  ]
 }
